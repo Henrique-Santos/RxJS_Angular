@@ -1,10 +1,9 @@
-import { Subscription } from 'rxjs';
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component } from '@angular/core';
 import { FormControl } from '@angular/forms';
+import { merge } from 'rxjs';
+import { switchMap, tap } from 'rxjs/operators';
 
 import { AcoesService } from './acoes.service';
-import { Acoes } from './modelo/acoes';
-import { THIS_EXPR } from '@angular/compiler/src/output/output_ast';
 
 @Component({
   selector: 'app-acoes',
@@ -13,7 +12,14 @@ import { THIS_EXPR } from '@angular/compiler/src/output/output_ast';
 })
 export class AcoesComponent {
   acoesInput = new FormControl()
-  acoes$ = this.acoesService.getAcoes()
+
+  todasAcoes$ = this.acoesService.getAcoes().pipe(tap(() => console.log('Fluxo Inicial')))
+
+  filtroPeloInput$ = this.acoesInput.valueChanges
+    .pipe(tap(() => console.log('Fluxo do Filtro')))
+    .pipe(switchMap(valorDigitado => this.acoesService.getAcoes(valorDigitado)))
+
+  acoes$ = merge(this.todasAcoes$, this.filtroPeloInput$)
 
   constructor(private acoesService: AcoesService) {}
   
